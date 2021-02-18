@@ -3,8 +3,12 @@ using System.Threading;
 
 namespace lab1 {
 	static class Program {
-		const int Length = 3;
-
+		const int Length = 2;
+		 private static int[,] _matrix;
+		 private static int[] _vector;
+		 private static int[] _result;
+		  const int ThreadsCount = 2;
+		private static int step = 0;
 		private static int[] GetVector(int length) {
 			Random rnd = new Random();
 			int[] arr = new int[length];
@@ -25,82 +29,44 @@ namespace lab1 {
 			}
 			return matrix;
 		}
-
-		private static int[] Mult(int[,] matrix, int[] vec,int length) {
-			int[] res = new int[length];
-			for (int i = 0; i < length; i++) {
-				for (int j = 0; j < length; j++) {
-					res[i] += matrix[i,j] * vec[j];
-				}
-			}
-			return res;
+		private static void Multiplication() {
+			int core = step++;
+			for (int i = core * Length / ThreadsCount; i < (core + 1) * Length / ThreadsCount; i++) 
+				for (int j = 0; j < Length; j++)
+					_result[i] += _matrix[i,j] * _vector[j];
 		}
-		
-		
-		
-		private static void Multiplication(int tmp) {
-			
-			int core = step_i++; 
-
-			// Each thread computes 1/4th of matrix multiplication 
-			for (int i = core * MAX / 4; i < (core + 1) * MAX / 4; i++) 
-			for (int j = 0; j < MAX; j++) 
-			for (int k = 0; k < MAX; k++) 
-				matC[i][j] += matA[i][k] * matB[k][j]; 
-			
-			
-			
-		}
-		
-		
-		
 		
 		static void Main(string[] args) {
-			const int maxThread = 4;
-			
-			int[,] matrix = GetMatrix(Length);
-			int[] vector = GetVector(Length);
+			_matrix = new int[Length, Length];
+			_vector= new int[Length];
+			_result= new int[Length];
+			 _matrix = GetMatrix(Length);
+			_vector = GetVector(Length);
 
 			Console.Write("Matrix: \n");
 			for (int i = 0; i < Length; i++){
 				for (int j = 0; j < Length; j++){
-					Console.Write("{0}\t", matrix[i, j]);
+					Console.Write("{0}\t", _matrix[i, j]);
 				}
 				Console.WriteLine();
 			}
 			Console.Write("\nVector: \n");
-			foreach (var number in vector){
+			foreach (var number in _vector){
 				Console.Write("{0}\t", number);
 			}
-			
-			
-			
-			
-			int[] res = Mult(matrix, vector, Length);
-			
-			
-			
-			Thread[] threads = new Thread[4];
-			
-			for (int i = 0; i < 4; i++){
-				int localNum = i;
-				threads[i] = new Thread(() => Multiplication(localNum));
+
+			Thread[] threads = new Thread[ThreadsCount];
+			for (int i = 0; i < ThreadsCount; i++){
+				threads[i] = new Thread(Multiplication);
 			}
-			for (int i = 0; i < 4; i++){
+			for (int i = 0; i < ThreadsCount; i++){
 				threads[i].Start();
 			}
-			for (int i = 0; i < 4; i++){
+			for (int i = 0; i < ThreadsCount; i++){
 				threads[i].Join();
 			}
-
-
-
-
-
-
-
 			Console.Write("\nResult: \n");
-			foreach (var number in res){
+			foreach (var number in _result){
 				Console.Write("{0}\t", number);
 			}
 		}
